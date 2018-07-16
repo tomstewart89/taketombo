@@ -40,12 +40,12 @@ class ModelParam:
     def __init__(self,):
         """Initializes the parameters to default values"""
         self.c_d = 0.020
-        self.c_t = 5e-7
+        self.c_t = 1e-4  # 1N / (100rad/s)^2
         self.g = 9.81
         self.l1 = 0.025
         self.l2 = 0.025
         self.l3 = 0.050
-        self.l4 = 0.025
+        self.l4 = 0.050
         self.lp = 0.025
         self.m1 = 0.100
         self.m2 = 0.100
@@ -61,9 +61,9 @@ class ModelParam:
         self.J3_xx = 1e-3
         self.J3_yy = 1e-3
         self.J3_zz = 1e-3
-        self.Jp_xx = 1e-8
-        self.Jp_yy = 1e-8
-        self.Jp_zz = 1e-5
+        self.Jp_xx = 1e-9
+        self.Jp_yy = 1e-7
+        self.Jp_zz = 1e-7
 
     def is_valid(self,):
         """Checks validity of parameter configuration
@@ -195,6 +195,10 @@ class ModelState:
     @property
     def roll_pitch_yaw_rate(self):
         return self.x[PHI_DOT_IDX:PSI_DOT_IDX + 1]
+
+    @roll_pitch_yaw_rate.setter
+    def roll_pitch_yaw_rate(self, value):
+        self.x[PHI_DOT_IDX:PSI_DOT_IDX + 1] = value
 
     @property
     def pos(self):
@@ -669,12 +673,12 @@ class DynamicModel:
             (beta2_dot * (-x239 - x240) + theta_dot * (x128 * x82 - x146 * x78) + x135 * x78) - self.p.Jp_zz * x242
         x244 = x130 * x76 - x137 * x80
         x245 = x232 * x244
-        x246 = self.p.Jp_xx * (beta1_dot * x244 + theta_dot * (-x128 * x76 -
-                                                               x146 * x80) + x135 * x80) - self.p.Jp_yy * x245 + self.p.Jp_zz * x245
+        x246 = self.p.Jp_xx * (beta1_dot * x244 + theta_dot * (-x128 * x76 - \
+                               x146 * x80) + x135 * x80) - self.p.Jp_yy * x245 + self.p.Jp_zz * x245
         x247 = x130 * x78 - x137 * x82
         x248 = x238 * x247
-        x249 = self.p.Jp_xx * (beta2_dot * x247 + theta_dot * (-x128 * x78 -
-                                                               x146 * x82) + x135 * x82) - self.p.Jp_yy * x248 + self.p.Jp_zz * x248
+        x249 = self.p.Jp_xx * (beta2_dot * x247 + theta_dot * (-x128 * x78 - \
+                               x146 * x82) + x135 * x82) - self.p.Jp_yy * x248 + self.p.Jp_zz * x248
         x250 = x138 * x2 - x164 * x46
         x251 = x161 * x250
         x252 = alphax_dot * x186
@@ -685,8 +689,8 @@ class DynamicModel:
         x256 = x164 * x2
         x257 = x255 + x256
         x258 = x161 * x257
-        x259 = self.p.J3_xx * (alphay_dot * (-x255 - x256) + theta_dot * (-x128 * x2 -
-                                                                          x174 * x46) - x252 * x46 - x253 * x46) - self.p.J3_yy * x258 + self.p.J3_zz * x258
+        x259 = self.p.J3_xx * (alphay_dot * (-x255 - x256) + theta_dot * (-x128 * x2 - \
+                               x174 * x46) - x252 * x46 - x253 * x46) - self.p.J3_yy * x258 + self.p.J3_zz * x258
         x260 = x130 * x137
         x261 = phi_dot * x154 - x124 * x127
         x262 = -self.p.J1_xx * x260 + self.p.J1_yy * x260 + self.p.J1_zz * x261
@@ -901,11 +905,34 @@ class DynamicModel:
 
         Returns: list of x/y/z coordinates of ball surface and zero angle reference
         """
-        p1 = np.array([0, 0, -l0])
-        p2 = np.array([0, 0, l1 - l0])
 
-        R_IB = q_IB.rotation_matrix()
+        """https://stackoverflow.com/questions/44881885/python-draw-3d-cube"""
+        points = np.array([[-1, -1, -1],
+                           [1, -1, -1],
+                           [1, 1, -1],
+                           [-1, 1, -1],
+                           [-1, -1, 1],
+                           [1, -1, 1],
+                           [1, 1, 1],
+                           [-1, 1, 1]])
 
-        p_rot = np.dot(R_IB, np.array([p1, p2]).T)
+        width = 0.025
 
-        return [np.array([center[i] + p_rot[i, :]]) for i in range(3)]
+        P = np.dot(q_IB.rotation_matrix(), np.diag([width / 2, width / 2, l1 / 2]))
+
+        Z = np.zeros((8, 3))
+        for i in range(8):
+            Z[i, :] = np.dot(P, points[i, :] + np.array([0, 0, l0 - 0.5 * l1])) + center
+
+        # list of sides' polygons of figure
+        verts = [
+            [
+                Z[0], Z[1], Z[2], Z[3]], [
+                Z[4], Z[5], Z[6], Z[7]], [
+                Z[0], Z[1], Z[5], Z[4]], [
+                    Z[2], Z[3], Z[7], Z[6]], [
+                        Z[1], Z[2], Z[6], Z[5]], [
+                            Z[4], Z[7], Z[3], Z[0]], [
+                                Z[2], Z[3], Z[7], Z[6]]]
+
+        return verts

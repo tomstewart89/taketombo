@@ -29,7 +29,7 @@ alphax_ddot, alphay_ddot, beta1_ddot, beta2_ddot, phi_ddot, psi_ddot, theta_ddot
 
 # parameter
 c_d, c_t, l1, l2, l3, l4, lp, m1, m2, m3, mp, tau, J1_xx, J1_yy, J1_zz, J2_xx, J2_yy, J2_zz, J3_xx, J3_yy, J3_zz, Jp_xx, Jp_yy, Jp_zz = symbols(
-    'c_d c_t l1, l2, l3, l4, lp, m1, m2, m3, mp, tau, J1_xx, J1_yy, J1_zz, J2_xx, J2_yy, J2_zz, J3_xx, J3_yy, J3_zz, Jp_xx, Jp_yy, Jp_zz')
+    'c_d, c_t, l1, l2, l3, l4, lp, m1, m2, m3, mp, tau, J1_xx, J1_yy, J1_zz, J2_xx, J2_yy, J2_zz, J3_xx, J3_yy, J3_zz, Jp_xx, Jp_yy, Jp_zz')
 
 # constants
 g = symbols('g')
