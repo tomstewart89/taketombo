@@ -41,14 +41,14 @@ omega_cmd = Matrix([omega_x_cmd, omega_y_cmd])
 
 # parameter lists:
 m = [m1, m2, m3, mp, mp]
-J = [diag(J1_xx, J1_yy, J1_zz),  diag(J2_xx, J2_yy, J2_zz),  diag(
+J = [diag(J1_xx, J1_yy, J1_zz), diag(J2_xx, J2_yy, J2_zz), diag(
     J3_xx, J3_yy, J3_zz), diag(Jp_xx, Jp_yy, Jp_zz), diag(Jp_xx, Jp_yy, Jp_zz)]
 
 # primary (upper) body
 R_IB1 = rot_axis3(-psi) * rot_axis2(-theta) * rot_axis1(-phi)
 I_r_OS1 = Matrix([x, y, z])
 B1_v_S1 = Matrix([u, v, w])
-I_v_S1 = R_IB1*B1_v_S1
+I_v_S1 = R_IB1 * B1_v_S1
 [x_dot, y_dot, z_dot] = I_v_S1
 
 B1_omega_IB1 = Matrix([phi_dot, 0, 0]) + rot_axis1(phi) * Matrix(
@@ -56,7 +56,7 @@ B1_omega_IB1 = Matrix([phi_dot, 0, 0]) + rot_axis1(phi) * Matrix(
 
 # middle body:
 R_B1B2 = rot_axis1(-alphax)
-R_IB2 = R_IB1*R_B1B2
+R_IB2 = R_IB1 * R_B1B2
 B1_r_S1M1 = Matrix([0, 0, -l1])
 
 B1_v_M1 = B1_v_S1 + B1_omega_IB1.cross(B1_r_S1M1)
@@ -65,27 +65,27 @@ B1_omega_IB2 = B1_omega_IB1 + Matrix([alphax_dot, 0, 0])
 
 B2_r_M1S2 = Matrix([0, 0, -l2])
 
-B1_v_S2 = B1_v_M1 + B1_omega_IB2.cross(R_B1B2*B2_r_M1S2)
+B1_v_S2 = B1_v_M1 + B1_omega_IB2.cross(R_B1B2 * B2_r_M1S2)
 
-I_r_OS2 = I_r_OS1 + R_IB1*B1_r_S1M1 + R_IB2*B2_r_M1S2
+I_r_OS2 = I_r_OS1 + R_IB1 * B1_r_S1M1 + R_IB2 * B2_r_M1S2
 B2_omega_IB2 = R_B1B2.T * B1_omega_IB2
 
 
 # lower body
 R_B2B3 = rot_axis2(-alphay)
-R_B1B3 = R_B1B2*R_B2B3
-R_IB3 = R_IB1*R_B1B3
+R_B1B3 = R_B1B2 * R_B2B3
+R_IB3 = R_IB1 * R_B1B3
 B2_r_M1M2 = Matrix([0, 0, -l3])
 
-B1_v_M2 = B1_v_M1 + B1_omega_IB2.cross(R_B1B2*B2_r_M1M2)
+B1_v_M2 = B1_v_M1 + B1_omega_IB2.cross(R_B1B2 * B2_r_M1M2)
 
 B2_omega_IB3 = B2_omega_IB2 + Matrix([0, alphay_dot, 0])
-B1_omega_IB3 = R_B1B2*B2_omega_IB3
+B1_omega_IB3 = R_B1B2 * B2_omega_IB3
 B3_r_M2S3 = Matrix([0, 0, -l4])
 
-B1_v_S3 = B1_v_M2 + B1_omega_IB3.cross(R_B1B3*B3_r_M2S3)
+B1_v_S3 = B1_v_M2 + B1_omega_IB3.cross(R_B1B3 * B3_r_M2S3)
 
-I_r_OS3 = I_r_OS1 + R_IB1*B1_r_S1M1 + R_IB2*B2_r_M1M2 + R_IB3*B3_r_M2S3
+I_r_OS3 = I_r_OS1 + R_IB1 * B1_r_S1M1 + R_IB2 * B2_r_M1M2 + R_IB3 * B3_r_M2S3
 B3_omega_IB3 = R_B2B3.T * B2_omega_IB3
 
 # todo: propeller1
@@ -107,9 +107,9 @@ B1_J_i = [v.jacobian(vel) for v in B1_v_i]
 Bi_JR_i = [om.jacobian(vel) for om in Bi_om_i]
 
 # Forces
-B1_F1 = R_IB1.T*Matrix([0, 0, -m1 * g])
-B1_F2 = R_IB1.T*Matrix([0, 0, -m2 * g])
-B1_F3 = R_IB1.T*Matrix([0, 0, -m3 * g])
+B1_F1 = R_IB1.T * Matrix([0, 0, -m1 * g])
+B1_F2 = R_IB1.T * Matrix([0, 0, -m2 * g])
+B1_F3 = R_IB1.T * Matrix([0, 0, -m3 * g])
 B1_F_i = [B1_F1, B1_F2, B1_F3]
 
 Bi_M1 = Matrix([-Tx, 0, 0])
@@ -156,7 +156,27 @@ sub_list = [
     (x,
      'self.p.' +
      x) for x in [
-        'l1', 'l2', 'l3', 'l4', 'm1', 'm2', 'm3', 'mp', 'tau', 'J1_xx', 'J1_yy', 'J1_zz', 'J2_xx', 'J2_yy', 'J2_zz', 'J3_xx', 'J3_yy', 'J3_zz', 'Jp_xx', 'Jp_yy', 'Jp_zz']]
+        'l1',
+        'l2',
+        'l3',
+        'l4',
+        'm1',
+        'm2',
+        'm3',
+        'mp',
+        'tau',
+        'J1_xx',
+        'J1_yy',
+        'J1_zz',
+        'J2_xx',
+        'J2_yy',
+        'J2_zz',
+        'J3_xx',
+        'J3_yy',
+        'J3_zz',
+        'Jp_xx',
+        'Jp_yy',
+        'Jp_zz']]
 
 for term in common_sub_expr[0]:
     print('        {} = {}'.format(term[0], term[1].subs(sub_list)))
