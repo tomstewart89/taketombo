@@ -16,16 +16,16 @@ x_dot, y_dot, z_dot = symbols('x_dot, y_dot, z_dot')
 u_dot, v_dot, w_dot = symbols('u_dot, v_dot, w_dot')
 
 # angles
-alphax, alphay, beta1, beta2, phi, psi, theta = symbols(
-    'alphax, alphay, beta1, beta2, phi, psi, theta')
+alphax, alphay, beta1, beta2, phi, theta, psi = symbols(
+    'alphax, alphay, beta1, beta2, phi, theta, psi')
 
 # angular velocities
-alphax_dot, alphay_dot, beta1_dot, beta2_dot, phi_dot, psi_dot, theta_dot = symbols(
-    'alphax_dot, alphay_dot, beta1_dot, beta2_dot, phi_dot, psi_dot, theta_dot')
+alphax_dot, alphay_dot, beta1_dot, beta2_dot, phi_dot, theta_dot, psi_dot = symbols(
+    'alphax_dot, alphay_dot, beta1_dot, beta2_dot, phi_dot, theta_dot, psi_dot')
 
 # angular accelerations
-alphax_ddot, alphay_ddot, beta1_ddot, beta2_ddot, phi_ddot, psi_ddot, theta_ddot = symbols(
-    'alphax_ddot, alphay_ddot, beta1_ddot, beta2_ddot, phi_ddot, psi_ddot, theta_ddot')
+alphax_ddot, alphay_ddot, beta1_ddot, beta2_ddot, phi_ddot, theta_ddot, psi_ddot = symbols(
+    'alphax_ddot, alphay_ddot, beta1_ddot, beta2_ddot, phi_ddot, theta_ddot, psi_ddot')
 
 # parameter
 c_d, c_t, l1, l2, l3, l4, lp, m1, m2, m3, mp, tau, J1_xx, J1_yy, J1_zz, J2_xx, J2_yy, J2_zz, J3_xx, J3_yy, J3_zz, Jp_xx, Jp_yy, Jp_zz = symbols(
@@ -114,12 +114,12 @@ B1_v_i = [B1_v_S1, B1_v_S2, B1_v_S3, B1_v_Sp1, B1_v_Sp2]
 Bi_om_i = [B1_omega_IB1, B2_omega_IB2, B3_omega_IB3, Bp1_omega_IP1, Bp2_omega_IP2]
 
 acc = Matrix([u_dot, v_dot, w_dot, alphax_ddot, alphay_ddot,
-              beta1_ddot, beta2_ddot, phi_ddot, psi_ddot, theta_ddot])
+              beta1_ddot, beta2_ddot, phi_ddot, theta_ddot, psi_ddot])
 vel = Matrix([u, v, w, alphax_dot, alphay_dot, beta1_dot,
-              beta2_dot, phi_dot, psi_dot, theta_dot])
-pos = Matrix([x, y, z, alphax, alphay, beta1, beta2, phi, psi, theta])
+              beta2_dot, phi_dot, theta_dot, psi_dot])
+pos = Matrix([x, y, z, alphax, alphay, beta1, beta2, phi, theta, psi])
 pos_dot = Matrix([x_dot, y_dot, z_dot, alphax_dot, alphay_dot,
-                  beta1_dot, beta2_dot, phi_dot, psi_dot, theta_dot])
+                  beta1_dot, beta2_dot, phi_dot, theta_dot, psi_dot])
 
 B1_J_i = [v.jacobian(vel) for v in B1_v_i]
 Bi_JR_i = [om.jacobian(vel) for om in Bi_om_i]
