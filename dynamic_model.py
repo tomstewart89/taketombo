@@ -287,17 +287,17 @@ class DynamicModel:
         else:
             self.state = ModelState()
 
-    def simulate_step(self, delta_t, omega_cmd):
+    def simulate_step(self, delta_t, motor_cmds):
         """Simulate one time step
 
         Simulates the changes of the state over a time interval.
 
         args:
             delta_t: time step [s]
-            omega_cmd (np.ndarray): motor speed commands [rad/s]
+            motor_cmds (np.ndarray): motor commands: [servo x-angle [rad], servo y-angle [rad], counter-clockwise propeller-motor speed [rad/s], clockwise propeller-motor speed [rad/s]]
         """
         t = np.array([0, delta_t])
-        self.state.x = odeint(self._x_dot, self.state.x, t, args=(omega_cmd,))[-1]
+        self.state.x = odeint(self._x_dot, self.state.x, t, args=(motor_cmds,))[-1]
 
         # normalize quaternions
         self.state.normalize_quaternions()
@@ -329,7 +329,7 @@ class DynamicModel:
             r_OSi[2], self.p.l4, 2 * self.p.l4, state.q3)
         return vis
 
-    def _x_dot(self, x, t, omega_cmd):
+    def _x_dot(self, x, t, motor_cmds):
         """computes the derivative of the state
 
         This function returns an numpy.array of the derivatives of the states, given the current state and inputs.
@@ -339,7 +339,7 @@ class DynamicModel:
         args:
             x (numpy.ndarray): state at which the state derivative function is evaluated
             t: time [s]. Since this system is time invariant, this argument is unused.
-            omega_cmd (np.ndarray): motor speed commands [rad/s]
+            motor_cmds (np.ndarray): motor commands: [servo x-angle [rad], servo y-angle [rad], counter-clockwise propeller-motor speed [rad/s], clockwise propeller-motor speed [rad/s]]
         returns:
             ModelState containing the time derivatives of all states
         """
@@ -347,7 +347,7 @@ class DynamicModel:
 
         xdot = ModelState()
 
-        xdot.vel = self._compute_vel_dot(eval_state, omega_cmd)
+        xdot.vel = self._compute_vel_dot(eval_state, motor_cmds)
 
         omega_1 = self._get_upper_body_omega(eval_state)
 
@@ -385,12 +385,12 @@ class DynamicModel:
 
         return B1_omega_IB1
 
-    def _compute_vel_dot(self, state, omega_cmd):
+    def _compute_vel_dot(self, state, motor_cmds):
         """computes derivative of velocity states
 
         args:
             state (ModelState): current state
-            omega_cmd (np.ndarray): motor speed commands [rad/s]
+            motor_cmds (np.ndarray): motor commands: [servo x-angle [rad], servo y-angle [rad], counter-clockwise propeller-motor speed [rad/s], clockwise propeller-motor speed [rad/s]]
 
         Returns: array containing the time derivative of the velocity states
         """
@@ -403,15 +403,19 @@ class DynamicModel:
         [u, v, w] = state.B_vel
         g = self.p.g
 
-        [omega_x_cmd, omega_y_cmd, omega_1_cmd, omega_2_cmd] = omega_cmd
+        [alphax_cmd, alphay_cmd, omega_1_cmd, omega_2_cmd] = motor_cmds
 
         if omega_1_cmd < 0:
-            print('omega_1_cmd = {} < 0. The model only works properly when spinning motor 1 in positive direction'.format(
+            print('omega_1_cmd = {} is not >= 0 as it should be. The model only works properly when spinning motor 1 in positive direction'.format(
                 omega_1_cmd))
 
         if omega_2_cmd > 0:
-            print('omega_1_cmd = {} > 0. The model only works properly when spinning motor 2 in negative direction'.format(
-                omega_1_cmd))
+            print('omega_2_cmd = {} is not <= 0  as it should be. The model only works properly when spinning motor 2 in negative direction'.format(
+                omega_2_cmd))
+
+        # simulate servo position control (critically damped)
+        omega_x_cmd = 1 / (4 * self.p.tau) * (alphax_cmd - alphax)
+        omega_y_cmd = 1 / (4 * self.p.tau) * (alphay_cmd - alphay)
 
         A = np.zeros([10, 10])
         b = np.zeros(10)
