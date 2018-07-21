@@ -28,17 +28,17 @@ alphax_ddot, alphay_ddot, beta1_ddot, beta2_ddot, phi_ddot, theta_ddot, psi_ddot
     'alphax_ddot, alphay_ddot, beta1_ddot, beta2_ddot, phi_ddot, theta_ddot, psi_ddot')
 
 # parameter
-c_d, c_t, l1, l2, l3, l4, lp, m1, m2, m3, mp, tau, J1_xx, J1_yy, J1_zz, J2_xx, J2_yy, J2_zz, J3_xx, J3_yy, J3_zz, Jp_xx, Jp_yy, Jp_zz = symbols(
-    'c_d, c_t, l1, l2, l3, l4, lp, m1, m2, m3, mp, tau, J1_xx, J1_yy, J1_zz, J2_xx, J2_yy, J2_zz, J3_xx, J3_yy, J3_zz, Jp_xx, Jp_yy, Jp_zz')
+c_d, c_t, l1, l2, l3, l4, lp, m1, m2, m3, mp, tau_alpha, tau_alpha_dot, tau_omega, J1_xx, J1_yy, J1_zz, J2_xx, J2_yy, J2_zz, J3_xx, J3_yy, J3_zz, Jp_xx, Jp_yy, Jp_zz = symbols(
+    'c_d, c_t, l1, l2, l3, l4, lp, m1, m2, m3, mp, tau_alpha, tau_alpha_dot, tau_omega, J1_xx, J1_yy, J1_zz, J2_xx, J2_yy, J2_zz, J3_xx, J3_yy, J3_zz, Jp_xx, Jp_yy, Jp_zz')
 
 # constants
 g = symbols('g')
 
 # inputs
 Tx, Ty, T1, T2 = symbols('Tx Ty T1 T2')
-omega_x_cmd, omega_y_cmd, omega_1_cmd, omega_2_cmd = symbols(
-    'omega_x_cmd omega_y_cmd omega_1_cmd omega_2_cmd')
-omega_cmd = Matrix([omega_x_cmd, omega_y_cmd, omega_1_cmd, omega_2_cmd])
+alphax_cmd, alphay_cmd, omega_1_cmd, omega_2_cmd = symbols(
+    'alphax_cmd alphay_cmd omega_1_cmd omega_2_cmd')
+motor_cmds = Matrix([alphax_cmd, alphay_cmd, omega_1_cmd, omega_2_cmd])
 
 # parameter lists:
 m = [m1, m2, m3, mp, mp]
@@ -165,12 +165,14 @@ for i in range(5):
     print('generated term {} of 5 dynamic terms'.format(i))
 
 # replace the 4th and 5th equation (the only ones containing Tx, Ty)
-dyn[3] = alphax_ddot - 1 / tau * (omega_x_cmd - alphax_dot)
-dyn[4] = alphay_ddot - 1 / tau * (omega_y_cmd - alphay_dot)
+omega_x_cmd = 1 / tau_alpha * (alphax_cmd - alphax)
+omega_y_cmd = 1 / tau_alpha * (alphay_cmd - alphay)
+dyn[3] = alphax_ddot - 1 / tau_alpha_dot * (omega_x_cmd - alphax_dot)
+dyn[4] = alphay_ddot - 1 / tau_alpha_dot * (omega_y_cmd - alphay_dot)
 
 # replace the 6th and 7th equation (the only ones containing T1, T2)
-dyn[5] = beta1_ddot - 1 / tau * (omega_1_cmd - beta1_dot)
-dyn[6] = beta2_ddot - 1 / tau * (omega_2_cmd - beta2_dot)
+dyn[5] = beta1_ddot - 1 / tau_omega * (omega_1_cmd - beta1_dot)
+dyn[6] = beta2_ddot - 1 / tau_omega * (omega_2_cmd - beta2_dot)
 
 # check that all Tx, Ty, T1, T2 terms are eliminated
 print(Matrix(dyn[:]).jacobian(Matrix([Tx, Ty, T1, T2])) == zeros(10, 4))
@@ -198,7 +200,9 @@ sub_list = [
         'm2',
         'm3',
         'mp',
-        'tau',
+        'tau_alpha',
+        'tau_alpha_dot',
+        'tau_omega',
         'J1_xx',
         'J1_yy',
         'J1_zz',
