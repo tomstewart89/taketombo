@@ -309,15 +309,11 @@ class DynamicModel:
     def get_visualization(self, state=None):
         """Get visualization of the system for plotting
 
-        Usage example:
-            v = model.get_visualization()
-            plt.plot(*v['upper_body'])
-
         args:
             state (ModelState, optional): state. If not specified, the internal state is checked
 
         Returns:
-            dict: dictionary with keys "upper_body", "middle_body" and "lower_body". The value for each key is a list with three elements: a list of x coordinates, a list of y coordinates and a list of z coordinates.
+            dict: dictionary with keys "upper_body", "middle_body", "lower_body", "thrust1" and "thrust2". For the "body" keys, the entry contains a MxNx3 matrix of x/y/z points; for the "thrust" keys, the entries are a list with 2 vector entries: the first one to the start point of the arrow, and the second one the directional vector of the arrow
         """
         if state is None:
             state = self.state
@@ -325,12 +321,20 @@ class DynamicModel:
         vis = {}
 
         r_OSi = self._compute_r_OSi(state)
+
+        R_IB1 = Quaternion(state.q1).rotation_matrix()
+
         vis['upper_body'] = self._compute_body_visualization(
-            r_OSi[0], self.p.lp, self.p.lp + self.p.l1, Quaternion(state.q1))
+            r_OSi[0], self.p.lp, self.p.lp + self.p.l1, R_IB1)
         vis['middle_body'] = self._compute_body_visualization(
-            r_OSi[1], self.p.l2, self.p.l3, state.q2)
+            r_OSi[1], self.p.l2, self.p.l3, state.q2.rotation_matrix())
         vis['lower_body'] = self._compute_body_visualization(
-            r_OSi[2], self.p.l4, 2 * self.p.l4, state.q3)
+            r_OSi[2], self.p.l4, 2 * self.p.l4, state.q3.rotation_matrix())
+        vis['thrust1'] = self._compute_thrust_visualization(
+            r_OSi[0], self.p.lp, 0.004, state.beta_dot[0], R_IB1)
+        vis['thrust2'] = self._compute_thrust_visualization(
+            r_OSi[0], self.p.lp, -0.004, state.beta_dot[1], R_IB1)
+
         return vis
 
     def _x_dot(self, x, t, motor_cmds):
@@ -900,14 +904,14 @@ class DynamicModel:
 
         return [I_r_OS1, I_r_OS2, I_r_OS3]
 
-    def _compute_body_visualization(self, center, l0, l1, q_IB):
+    def _compute_body_visualization(self, center, l0, l1, R_IB):
         """computes visualization points of a body
 
         args:
             center (numpy.ndarray): center of the body [m]
             l0 : distance from center of mass to upper end of the body [m]
             l1 : length of the body [m]
-            q_IB (Quaternion): orientation of the body frame B wrt. inertial frame I
+            R_IB (numpy.ndarray): orientation of the body frame B wrt. inertial frame I
 
         Returns: list of x/y/z coordinates of ball surface and zero angle reference
         """
@@ -924,7 +928,7 @@ class DynamicModel:
 
         width = 0.025
 
-        P = np.dot(q_IB.rotation_matrix(), np.diag([width / 2, width / 2, l1 / 2]))
+        P = np.dot(R_IB, np.diag([width / 2, width / 2, l1 / 2]))
 
         Z = np.zeros((8, 3))
         for i in range(8):
@@ -942,3 +946,22 @@ class DynamicModel:
                                 Z[2], Z[3], Z[7], Z[6]]]
 
         return verts
+
+    def _compute_thrust_visualization(self, center, lp, side_offset, beta_dot, R_IB):
+        """computes visualization points of a body
+
+        args:
+            center (numpy.ndarray): center of the body [m]
+            lp : z-distance from center of mass to thrust vector [m]
+            side_offset : z-offset of thrust vector [m]
+            beta_dot: angular velocity of propeller [rad/s]
+            R_IB (numpy.ndarray): orientation of the body frame B wrt. inertial frame I
+
+        Returns: list of 2 vectors: the first one to the start point of the arrow, and the second one the directional vector of the arrow
+        """
+        thrust = self.p.c_t * beta_dot**2
+        scale = 1e-2
+
+        B1_thrust_vec = np.array([0, 0, scale * thrust])
+
+        return center + np.dot(R_IB, np.array([side_offset, 0, lp])), np.dot(R_IB, B1_thrust_vec)
