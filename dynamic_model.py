@@ -6,6 +6,7 @@ import numpy as np
 from numpy import sin, cos, tan
 from scipy.integrate import odeint
 from pyrotation import Quaternion, quat_from_angle_vector
+from math import pi
 
 
 class ModelParam:
@@ -68,6 +69,11 @@ class ModelParam:
         self.Jp_xx = 1e-9
         self.Jp_yy = 1e-7
         self.Jp_zz = 1e-7
+
+        self.max_servo_angle = pi
+        self.min_servo_angle = -pi
+        self.max_rotor_speed = 300.
+        self.min_rotor_speed = 0.
 
     def is_valid(self,):
         """Checks validity of parameter configuration
