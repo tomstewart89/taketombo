@@ -70,8 +70,8 @@ class ModelParam:
         self.Jp_yy = 1e-7
         self.Jp_zz = 1e-7
 
-        self.max_servo_angle = pi
-        self.min_servo_angle = -pi
+        self.max_servo_angle = pi/2
+        self.min_servo_angle = -pi/2
         self.max_rotor_speed = 300.
         self.min_rotor_speed = 0.
 
@@ -170,7 +170,7 @@ class ModelState:
 
         # quaternion check
         if q1_norm == 0:
-            return false
+            return False
 
         self.x = x0_flat
         self.normalize_quaternions()
